@@ -1,6 +1,7 @@
 # Retail Insights Assistant (Demo-First)
 
 This project is a Streamlit + CrewAI assignment implementation for retail insights on the provided `sales-dataset`.
+Unzip sales-dataset here.
 
 ## What this app does
 
