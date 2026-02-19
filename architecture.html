@@ -1,0 +1,890 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Retail Insights Assistant — Architecture Presentation</title>
+<script src="https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.min.js"></script>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+
+  :root {
+    --primary: #1e3a5f;
+    --accent: #2e86de;
+    --accent-light: #e8f4fd;
+    --success: #27ae60;
+    --warning: #f39c12;
+    --danger: #e74c3c;
+    --bg: #ffffff;
+    --bg-alt: #f8f9fb;
+    --text: #2c3e50;
+    --text-light: #7f8c8d;
+    --border: #e0e6ed;
+    --shadow: 0 2px 12px rgba(0,0,0,0.08);
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+    color: var(--text);
+    background: var(--bg);
+    line-height: 1.7;
+    font-size: 14px;
+  }
+
+  @media print {
+    body { font-size: 11pt; }
+    .slide { page-break-after: always; box-shadow: none; border: none; margin: 0; padding: 40px; }
+    .slide:last-child { page-break-after: avoid; }
+    .no-print { display: none; }
+  }
+
+  .slide {
+    max-width: 960px;
+    margin: 40px auto;
+    padding: 48px 56px;
+    background: var(--bg);
+    border-radius: 12px;
+    box-shadow: var(--shadow);
+    border: 1px solid var(--border);
+  }
+
+  .slide-header {
+    border-bottom: 3px solid var(--accent);
+    padding-bottom: 12px;
+    margin-bottom: 28px;
+  }
+
+  .slide-number {
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--accent);
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+  }
+
+  h1 {
+    font-size: 28px;
+    font-weight: 700;
+    color: var(--primary);
+    margin-top: 4px;
+  }
+
+  h2 {
+    font-size: 20px;
+    font-weight: 600;
+    color: var(--primary);
+    margin: 24px 0 12px;
+  }
+
+  h3 {
+    font-size: 16px;
+    font-weight: 600;
+    color: var(--accent);
+    margin: 18px 0 8px;
+  }
+
+  p { margin: 8px 0; }
+
+  ul, ol {
+    margin: 8px 0 8px 24px;
+  }
+
+  li { margin: 4px 0; }
+
+  .mermaid {
+    display: flex;
+    justify-content: center;
+    margin: 24px 0;
+    background: var(--bg-alt);
+    border-radius: 8px;
+    padding: 20px;
+    border: 1px solid var(--border);
+  }
+
+  .badge {
+    display: inline-block;
+    padding: 3px 10px;
+    border-radius: 12px;
+    font-size: 12px;
+    font-weight: 600;
+  }
+
+  .badge-blue { background: var(--accent-light); color: var(--accent); }
+  .badge-green { background: #e8f8f0; color: var(--success); }
+  .badge-orange { background: #fef5e7; color: var(--warning); }
+  .badge-red { background: #fdedec; color: var(--danger); }
+
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 16px 0;
+    font-size: 13px;
+  }
+
+  th {
+    background: var(--primary);
+    color: white;
+    padding: 10px 14px;
+    text-align: left;
+    font-weight: 600;
+  }
+
+  td {
+    padding: 9px 14px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  tr:nth-child(even) { background: var(--bg-alt); }
+
+  .callout {
+    padding: 16px 20px;
+    border-radius: 8px;
+    margin: 16px 0;
+    border-left: 4px solid;
+  }
+
+  .callout-info { background: var(--accent-light); border-color: var(--accent); }
+  .callout-success { background: #e8f8f0; border-color: var(--success); }
+  .callout-warning { background: #fef5e7; border-color: var(--warning); }
+
+  .cols { display: flex; gap: 24px; margin: 16px 0; }
+  .col { flex: 1; }
+
+  .card {
+    background: var(--bg-alt);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 16px;
+    margin: 8px 0;
+  }
+
+  .card-title {
+    font-weight: 600;
+    color: var(--primary);
+    margin-bottom: 6px;
+  }
+
+  .tag-row { display: flex; flex-wrap: wrap; gap: 6px; margin: 8px 0; }
+
+  code {
+    background: var(--bg-alt);
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-size: 13px;
+    color: var(--accent);
+  }
+
+  .title-slide {
+    text-align: center;
+    padding: 80px 56px;
+  }
+
+  .title-slide h1 {
+    font-size: 36px;
+    margin-bottom: 12px;
+  }
+
+  .title-slide .subtitle {
+    font-size: 18px;
+    color: var(--text-light);
+    margin-bottom: 32px;
+  }
+
+  .title-slide .meta {
+    font-size: 14px;
+    color: var(--text-light);
+  }
+</style>
+</head>
+<body>
+
+<!-- ============================================================ -->
+<!-- SLIDE 1: Title -->
+<!-- ============================================================ -->
+<div class="slide title-slide">
+  <div class="slide-number">Architecture Presentation</div>
+  <h1>Retail Insights Assistant</h1>
+  <p class="subtitle">Multi-Agent AI Chatbot for E-Commerce Sales Analytics</p>
+  <p class="meta">
+    Built with <strong>Streamlit</strong> · <strong>CrewAI</strong> · <strong>OpenAI GPT-4.1-mini</strong> · <strong>Pandas</strong><br>
+    February 2026
+  </p>
+</div>
+
+<!-- ============================================================ -->
+<!-- SLIDE 2: System Architecture Overview -->
+<!-- ============================================================ -->
+<div class="slide">
+  <div class="slide-header">
+    <div class="slide-number">Slide 1</div>
+    <h1>System Architecture Overview</h1>
+  </div>
+
+  <p>The Retail Insights Assistant is a <strong>multi-agent AI system</strong> that converts natural-language business questions into deterministic data operations on retail sales datasets, returning validated, business-friendly answers.</p>
+
+  <div class="mermaid">
+    graph TB
+      subgraph UI["🖥️ Streamlit Frontend"]
+        A[Chat Interface] --> B[Mode Selector<br/>Q&A / Summarization]
+        A --> C[Quick Demo Queries]
+        A --> D[Execution Trace Viewer]
+      end
+
+      subgraph AGENTS["🤖 CrewAI Agent Pipeline"]
+        E[Resolver Agent<br/><i>Language → Tool Plan</i>]
+        F[Extractor Agent<br/><i>Data → Summary</i>]
+        G[Validator Agent<br/><i>Summary → Answer</i>]
+        E -->|JSON Plan| H[Tool Executor]
+        H -->|Results| F
+        F -->|Bullets| G
+      end
+
+      subgraph DATA["📊 Data Layer"]
+        I[DatasetBundle<br/><i>5 DataFrames + 2 Texts</i>]
+        J[PandasTools<br/><i>18 Analytical Functions</i>]
+        I --> J
+      end
+
+      subgraph LLM["☁️ OpenAI API"]
+        K[GPT-4.1-mini<br/><i>temperature=0</i>]
+      end
+
+      A -->|User Query| E
+      E -.->|LLM Call| K
+      F -.->|LLM Call| K
+      G -.->|LLM Call| K
+      H --> J
+      G -->|Final Answer| A
+
+      style UI fill:#e8f4fd,stroke:#2e86de,color:#1e3a5f
+      style AGENTS fill:#e8f8f0,stroke:#27ae60,color:#1e3a5f
+      style DATA fill:#fef5e7,stroke:#f39c12,color:#1e3a5f
+      style LLM fill:#fdedec,stroke:#e74c3c,color:#1e3a5f
+  </div>
+
+  <div class="callout callout-info">
+    <strong>Key Design Principle:</strong> No dynamic code generation. All data operations use pre-built, deterministic Pandas functions — the LLM only decides <em>which</em> functions to call and with <em>what</em> parameters.
+  </div>
+</div>
+
+<!-- ============================================================ -->
+<!-- SLIDE 3: Data Flow Pipeline -->
+<!-- ============================================================ -->
+<div class="slide">
+  <div class="slide-header">
+    <div class="slide-number">Slide 2</div>
+    <h1>End-to-End Data Flow</h1>
+  </div>
+
+  <div class="mermaid">
+    graph LR
+      A["📂 CSV Files<br/>(7 sources)"] -->|pd.read_csv| B["🧹 Cleaning<br/>Pipeline"]
+      B -->|normalize cols<br/>parse dates<br/>type convert| C["📦 DatasetBundle"]
+      C --> D["🔧 PandasTools<br/>(18 tools)"]
+
+      E["💬 User Query"] --> F["🧠 Resolver<br/>Agent"]
+      F -->|JSON plan| G["⚙️ Tool<br/>Executor"]
+      G -->|run_tool()| D
+      D -->|ToolResult| G
+      G -->|results[]| H["📋 Extractor<br/>Agent"]
+      H -->|summary| I["✅ Validator<br/>Agent"]
+      I --> J["💬 Final<br/>Answer"]
+
+      style A fill:#fef5e7,stroke:#f39c12
+      style B fill:#fef5e7,stroke:#f39c12
+      style C fill:#fef5e7,stroke:#f39c12
+      style D fill:#fef5e7,stroke:#f39c12
+      style F fill:#e8f8f0,stroke:#27ae60
+      style H fill:#e8f8f0,stroke:#27ae60
+      style I fill:#e8f8f0,stroke:#27ae60
+  </div>
+
+  <h2>Data Sources</h2>
+  <table>
+    <tr>
+      <th>File</th>
+      <th>Type</th>
+      <th>Records</th>
+      <th>Description</th>
+    </tr>
+    <tr>
+      <td><code>Amazon Sale Report.csv</code></td>
+      <td><span class="badge badge-blue">DataFrame</span></td>
+      <td>~128K orders</td>
+      <td>Amazon India orders with status, amounts, geography, B2B flags</td>
+    </tr>
+    <tr>
+      <td><code>International sale Report.csv</code></td>
+      <td><span class="badge badge-blue">DataFrame</span></td>
+      <td>~37K transactions</td>
+      <td>International sales with customer, style, rate, gross amount</td>
+    </tr>
+    <tr>
+      <td><code>Sale Report.csv</code></td>
+      <td><span class="badge badge-blue">DataFrame</span></td>
+      <td>~9K SKUs</td>
+      <td>Inventory stock levels by SKU, category, size, color</td>
+    </tr>
+    <tr>
+      <td><code>May-2022.csv</code></td>
+      <td><span class="badge badge-blue">DataFrame</span></td>
+      <td>Multi-channel</td>
+      <td>Pricing across Amazon, Flipkart, Myntra, Ajio, etc.</td>
+    </tr>
+    <tr>
+      <td><code>P&amp;L March 2021.csv</code></td>
+      <td><span class="badge badge-blue">DataFrame</span></td>
+      <td>Multi-channel</td>
+      <td>Historical pricing and transfer prices by category</td>
+    </tr>
+    <tr>
+      <td><code>Expense IIGF.csv</code></td>
+      <td><span class="badge badge-green">Text</span></td>
+      <td>—</td>
+      <td>Financial expense/income statement (comma-stripped text)</td>
+    </tr>
+    <tr>
+      <td><code>Cloud Warehouse Compersion Chart.csv</code></td>
+      <td><span class="badge badge-green">Text</span></td>
+      <td>—</td>
+      <td>Warehouse cost comparison: Shiprocket vs INCREFF</td>
+    </tr>
+  </table>
+
+  <h2>Cleaning Pipeline</h2>
+  <div class="cols">
+    <div class="col card">
+      <div class="card-title">Column Normalization</div>
+      Spaces → underscores, special characters removed, consistent casing
+    </div>
+    <div class="col card">
+      <div class="card-title">Type Conversion</div>
+      Numeric columns coerced, dates parsed per source format (Amazon vs International)
+    </div>
+    <div class="col card">
+      <div class="card-title">Business Logic</div>
+      Status flags added: <code>is_delivered</code>, <code>is_cancelled</code> for KPI computation
+    </div>
+  </div>
+</div>
+
+<!-- ============================================================ -->
+<!-- SLIDE 4: Multi-Agent Architecture -->
+<!-- ============================================================ -->
+<div class="slide">
+  <div class="slide-header">
+    <div class="slide-number">Slide 3</div>
+    <h1>Multi-Agent Architecture (3-Agent Pipeline)</h1>
+  </div>
+
+  <div class="mermaid">
+    graph TB
+      Q["💬 User Query + History<br/><i>(last 8 messages)</i>"]
+
+      subgraph R["Agent 1: Resolver"]
+        R1["System Prompt:<br/>Map query → tool calls"]
+        R2["Output: JSON Plan<br/>{intent, tool_calls[], notes}"]
+        R1 --> R2
+      end
+
+      subgraph FB["Fallback"]
+        FB1["heuristic_plan()<br/><i>keyword-based routing</i>"]
+      end
+
+      subgraph EX["Tool Execution"]
+        EX1["PandasTools.run_tool()<br/><i>parameter validation<br/>whitelist check</i>"]
+      end
+
+      subgraph E["Agent 2: Extractor"]
+        E1["System Prompt:<br/>Summarize tool outputs"]
+        E2["Output: 4-8 bullet<br/>factual summary"]
+        E1 --> E2
+      end
+
+      subgraph V["Agent 3: Validator"]
+        V1["System Prompt:<br/>Validate &amp; format answer"]
+        V2["Output: Business-friendly<br/>final answer in ₹"]
+        V1 --> V2
+      end
+
+      Q --> R
+      R -->|JSON parse fail| FB
+      R -->|valid JSON| EX
+      FB --> EX
+      EX --> E
+      E --> V
+      V --> ANS["✅ Final Answer"]
+
+      style R fill:#dbeafe,stroke:#2563eb
+      style FB fill:#fef3c7,stroke:#d97706
+      style EX fill:#fef5e7,stroke:#f39c12
+      style E fill:#d1fae5,stroke:#059669
+      style V fill:#ede9fe,stroke:#7c3aed
+  </div>
+
+  <div class="cols">
+    <div class="col">
+      <div class="card">
+        <div class="card-title">🔍 Resolver Agent</div>
+        <ul>
+          <li>Maps natural language to structured tool calls</li>
+          <li>Outputs JSON with <code>intent</code>, <code>tool_calls[]</code>, <code>notes</code></li>
+          <li>Receives conversation history for context</li>
+          <li>Falls back to heuristic planner on parse failure</li>
+        </ul>
+      </div>
+    </div>
+    <div class="col">
+      <div class="card">
+        <div class="card-title">📋 Extractor Agent</div>
+        <ul>
+          <li>Reads raw tool outputs (records, summaries)</li>
+          <li>Produces 4–8 factual bullet points</li>
+          <li>Handles post-filtering for specific queries</li>
+          <li>Formats currency amounts in ₹</li>
+        </ul>
+      </div>
+    </div>
+    <div class="col">
+      <div class="card">
+        <div class="card-title">✅ Validator Agent</div>
+        <ul>
+          <li>Cross-checks extraction against raw results</li>
+          <li>Produces business-friendly final answer</li>
+          <li>Mentions partial evidence if data is incomplete</li>
+          <li>Mode-aware: Q&A vs Summarization</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ============================================================ -->
+<!-- SLIDE 5: LLM Integration Strategy -->
+<!-- ============================================================ -->
+<div class="slide">
+  <div class="slide-header">
+    <div class="slide-number">Slide 4</div>
+    <h1>LLM Integration Strategy</h1>
+  </div>
+
+  <div class="mermaid">
+    graph TB
+      subgraph Config["Configuration"]
+        A["OPENAI_API_KEY<br/>(env var)"]
+        B["OPENAI_MODEL<br/>(default: gpt-4.1-mini)"]
+        C["Temperature: 0<br/>(deterministic)"]
+      end
+
+      subgraph CrewAI["CrewAI Framework"]
+        D["Shared LLM Instance"]
+        E["Agent 1: Resolver"]
+        F["Agent 2: Extractor"]
+        G["Agent 3: Validator"]
+        D --> E
+        D --> F
+        D --> G
+      end
+
+      subgraph Safety["Safety Mechanisms"]
+        H["Tool Whitelist<br/>Only 18 approved tools"]
+        I["Parameter Validation<br/>kwargs filtered to signature"]
+        J["Heuristic Fallback<br/>keyword-based planning"]
+        K["No Code Generation<br/>deterministic functions only"]
+      end
+
+      Config --> CrewAI
+      CrewAI --> Safety
+
+      style Config fill:#fdedec,stroke:#e74c3c
+      style CrewAI fill:#e8f4fd,stroke:#2e86de
+      style Safety fill:#e8f8f0,stroke:#27ae60
+  </div>
+
+  <h2>Why This Approach?</h2>
+  <div class="cols">
+    <div class="col">
+      <div class="card">
+        <div class="card-title">🛡️ Security</div>
+        <p>No <code>exec()</code> or <code>eval()</code> — LLM cannot execute arbitrary code. All operations go through pre-defined, tested Pandas functions.</p>
+      </div>
+    </div>
+    <div class="col">
+      <div class="card">
+        <div class="card-title">🎯 Reliability</div>
+        <p>Temperature=0 ensures consistent outputs. Heuristic fallback guarantees a response even when the LLM returns malformed JSON.</p>
+      </div>
+    </div>
+    <div class="col">
+      <div class="card">
+        <div class="card-title">💰 Cost Efficiency</div>
+        <p>GPT-4.1-mini keeps per-query cost low (~$0.001–0.003). Three focused prompts avoid wasted tokens from a single monolithic prompt.</p>
+      </div>
+    </div>
+  </div>
+
+  <h2>Prompt Architecture</h2>
+  <table>
+    <tr>
+      <th>Prompt</th>
+      <th>Input Context</th>
+      <th>Output Format</th>
+    </tr>
+    <tr>
+      <td>Resolver System Prompt</td>
+      <td>Query + history (8 msgs) + tools list</td>
+      <td>JSON: <code>{intent, tool_calls[], notes}</code></td>
+    </tr>
+    <tr>
+      <td>Extractor System Prompt</td>
+      <td>Query + tool results JSON</td>
+      <td>4–8 bullet points (₹ currency)</td>
+    </tr>
+    <tr>
+      <td>Validator System Prompt</td>
+      <td>Mode + query + summary + raw results</td>
+      <td>Business-friendly final answer</td>
+    </tr>
+  </table>
+</div>
+
+<!-- ============================================================ -->
+<!-- SLIDE 6: Tool Catalog -->
+<!-- ============================================================ -->
+<div class="slide">
+  <div class="slide-header">
+    <div class="slide-number">Slide 5</div>
+    <h1>Analytical Tool Catalog (18 Tools)</h1>
+  </div>
+
+  <p>Each tool is a deterministic Pandas function returning a <code>ToolResult</code> with <code>tool_name</code>, <code>summary</code>, and <code>records[]</code> (capped at 20 rows).</p>
+
+  <div class="cols">
+    <div class="col">
+      <h3>Amazon Sales (8 tools)</h3>
+      <div class="card">
+        <ul>
+          <li><code>total_sales_amazon</code> — aggregate with date filter</li>
+          <li><code>units_sold_by_category</code> — unit counts per category</li>
+          <li><code>category_sales_rank</code> — top N categories by ₹</li>
+          <li><code>state_sales_rank</code> — top N states by ₹</li>
+          <li><code>city_sales_rank</code> — top N cities by ₹</li>
+          <li><code>order_status_breakdown</code> — status distribution</li>
+          <li><code>cancellation_rate</code> — % cancelled</li>
+          <li><code>b2b_vs_b2c_summary</code> — B2B vs B2C split</li>
+        </ul>
+      </div>
+
+      <h3>International Sales (3 tools)</h3>
+      <div class="card">
+        <ul>
+          <li><code>international_total_sales</code> — with month filter</li>
+          <li><code>top_customers_international</code> — top N by revenue</li>
+          <li><code>top_styles_international</code> — top N styles</li>
+        </ul>
+      </div>
+    </div>
+    <div class="col">
+      <h3>Inventory (3 tools)</h3>
+      <div class="card">
+        <ul>
+          <li><code>total_stock_by_category</code> — stock per category</li>
+          <li><code>low_stock_items</code> — below threshold (default 5)</li>
+          <li><code>stock_by_color</code> — stock per color</li>
+        </ul>
+      </div>
+
+      <h3>Pricing (2 tools)</h3>
+      <div class="card">
+        <ul>
+          <li><code>channel_price_comparison_may2022</code> — cross-channel Δ</li>
+          <li><code>price_snapshot_march2021</code> — historical snapshot</li>
+        </ul>
+      </div>
+
+      <h3>Text Retrieval (2 tools)</h3>
+      <div class="card">
+        <ul>
+          <li><code>expense_statement_text</code> — Expense IIGF (10K chars)</li>
+          <li><code>warehouse_comparison_text</code> — Warehouse chart (10K chars)</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ============================================================ -->
+<!-- SLIDE 7: Example Query-Response Pipeline -->
+<!-- ============================================================ -->
+<div class="slide">
+  <div class="slide-header">
+    <div class="slide-number">Slide 6</div>
+    <h1>Example Query-Response Pipeline</h1>
+  </div>
+
+  <div class="callout callout-info">
+    <strong>User asks:</strong> <em>"Which 5 states generated the highest sales?"</em>
+  </div>
+
+  <div class="mermaid">
+    sequenceDiagram
+      participant U as 👤 User
+      participant S as 🖥️ Streamlit
+      participant R as 🔍 Resolver
+      participant LLM as ☁️ GPT-4.1-mini
+      participant T as 🔧 PandasTools
+      participant E as 📋 Extractor
+      participant V as ✅ Validator
+
+      U->>S: "Which 5 states generated<br/>the highest sales?"
+      S->>R: query + history
+      R->>LLM: System prompt + query + tools list
+      LLM-->>R: {"intent":"state_ranking",<br/>"tool_calls":[{"tool":"state_sales_rank","top_n":5}]}
+      R->>T: run_tool("state_sales_rank", top_n=5)
+      T-->>R: ToolResult{records:[{state,Amount}×5]}
+      R->>E: query + tool_results
+      E->>LLM: Summarize these results
+      LLM-->>E: "• Maharashtra: ₹X\n• Karnataka: ₹Y\n..."
+      E->>V: query + summary + raw results
+      V->>LLM: Validate and format
+      LLM-->>V: Final business answer
+      V-->>S: formatted answer
+      S-->>U: Display answer + trace
+  </div>
+
+  <h2>Step-by-Step Breakdown</h2>
+  <table>
+    <tr>
+      <th>Step</th>
+      <th>Component</th>
+      <th>Action</th>
+      <th>Output</th>
+    </tr>
+    <tr>
+      <td><span class="badge badge-blue">1</span></td>
+      <td>Resolver</td>
+      <td>Parse intent, select tool</td>
+      <td><code>state_sales_rank(top_n=5)</code></td>
+    </tr>
+    <tr>
+      <td><span class="badge badge-blue">2</span></td>
+      <td>Tool Executor</td>
+      <td>Validate tool name, filter kwargs, run Pandas</td>
+      <td>5 records: state + Amount</td>
+    </tr>
+    <tr>
+      <td><span class="badge badge-green">3</span></td>
+      <td>Extractor</td>
+      <td>Summarize records into bullets</td>
+      <td>4–8 factual bullets with ₹ values</td>
+    </tr>
+    <tr>
+      <td><span class="badge badge-orange">4</span></td>
+      <td>Validator</td>
+      <td>Cross-validate, format for business user</td>
+      <td>Natural language answer</td>
+    </tr>
+  </table>
+</div>
+
+<!-- ============================================================ -->
+<!-- SLIDE 8: Technology Stack -->
+<!-- ============================================================ -->
+<div class="slide">
+  <div class="slide-header">
+    <div class="slide-number">Slide 7</div>
+    <h1>Technology Stack &amp; Dependencies</h1>
+  </div>
+
+  <div class="cols">
+    <div class="col">
+      <div class="card">
+        <div class="card-title">Frontend</div>
+        <div class="tag-row">
+          <span class="badge badge-blue">Streamlit</span>
+        </div>
+        <ul>
+          <li>Chat UI with message history</li>
+          <li>Mode selector (Q&A / Summarization)</li>
+          <li>Quick demo queries sidebar</li>
+          <li>Execution trace expander</li>
+        </ul>
+      </div>
+
+      <div class="card">
+        <div class="card-title">AI / LLM</div>
+        <div class="tag-row">
+          <span class="badge badge-green">CrewAI</span>
+          <span class="badge badge-green">OpenAI</span>
+        </div>
+        <ul>
+          <li>3-agent sequential pipeline</li>
+          <li>GPT-4.1-mini (configurable)</li>
+          <li>Structured prompts per agent</li>
+        </ul>
+      </div>
+    </div>
+    <div class="col">
+      <div class="card">
+        <div class="card-title">Data Processing</div>
+        <div class="tag-row">
+          <span class="badge badge-orange">Pandas</span>
+          <span class="badge badge-orange">Python 3.10+</span>
+        </div>
+        <ul>
+          <li>In-memory DataFrame processing</li>
+          <li>18 deterministic analytical tools</li>
+          <li>Data cleaning & normalization</li>
+        </ul>
+      </div>
+
+      <div class="card">
+        <div class="card-title">Configuration</div>
+        <div class="tag-row">
+          <span class="badge badge-red">python-dotenv</span>
+        </div>
+        <ul>
+          <li><code>.env</code> for API keys</li>
+          <li>Configurable model selection</li>
+          <li>Cached initialization via <code>@st.cache_resource</code></li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ============================================================ -->
+<!-- SLIDE 9: Demo Evidence -->
+<!-- ============================================================ -->
+<div class="slide">
+  <div class="slide-header">
+    <div class="slide-number">Slide 8</div>
+    <h1>Demo Evidence &amp; Q&A Examples</h1>
+  </div>
+
+  <div class="callout callout-success">
+    <strong>Video Demo:</strong> A full screen recording of the Streamlit application is included as <code>Screencast for retail insights assistant.mp4</code> in the project root, covering all 12 demo queries below.
+  </div>
+
+  <h2>Sample Q&A Interactions</h2>
+  <table>
+    <tr>
+      <th>#</th>
+      <th>Question</th>
+      <th>Tool(s) Invoked</th>
+      <th>Answer Type</th>
+    </tr>
+    <tr><td>1</td><td>How many blouse were sold?</td><td><code>units_sold_by_category</code></td><td>Single number</td></tr>
+    <tr><td>2</td><td>Which category sold the most units?</td><td><code>category_sales_rank</code></td><td>Ranked list</td></tr>
+    <tr><td>3</td><td>Which 5 states generated the highest sales?</td><td><code>state_sales_rank</code></td><td>Top-5 ranking</td></tr>
+    <tr><td>4</td><td>What is the cancellation rate?</td><td><code>cancellation_rate</code></td><td>Percentage KPI</td></tr>
+    <tr><td>5</td><td>Compare B2B and B2C sales.</td><td><code>b2b_vs_b2c_summary</code></td><td>Comparison table</td></tr>
+    <tr><td>6</td><td>Who are the top 5 customers by revenue?</td><td><code>top_customers_international</code></td><td>Ranked list</td></tr>
+    <tr><td>7</td><td>Total international sales in Jun-21?</td><td><code>international_total_sales</code></td><td>Aggregate with filter</td></tr>
+    <tr><td>8</td><td>Which items are low in stock (below 5)?</td><td><code>low_stock_items</code></td><td>Filtered list</td></tr>
+    <tr><td>9</td><td>Stock by category?</td><td><code>total_stock_by_category</code></td><td>Grouped aggregation</td></tr>
+    <tr><td>10</td><td>Price difference: Amazon vs Flipkart May 2022?</td><td><code>channel_price_comparison_may2022</code></td><td>Channel comparison</td></tr>
+    <tr><td>11</td><td>Summarize the Expense IIGF statement.</td><td><code>expense_statement_text</code></td><td>Text summary</td></tr>
+    <tr><td>12</td><td>Warehouse file on fill-rate penalty?</td><td><code>warehouse_comparison_text</code></td><td>Text retrieval</td></tr>
+  </table>
+
+  <h2>Interaction Modes</h2>
+  <div class="cols">
+    <div class="col card">
+      <div class="card-title">Q&A Mode</div>
+      Full 3-agent pipeline: Resolver → Tool Execution → Extractor → Validator. Handles analytical, ranking, comparison, and text-retrieval queries.
+    </div>
+    <div class="col card">
+      <div class="card-title">Summarization Mode</div>
+      One-click summary using top-category, top-state, cancellation rate, and inventory metrics. No LLM call needed — purely deterministic.
+    </div>
+  </div>
+</div>
+
+<!-- ============================================================ -->
+<!-- SLIDE 10: Cost & Performance -->
+<!-- ============================================================ -->
+<div class="slide">
+  <div class="slide-header">
+    <div class="slide-number">Slide 9</div>
+    <h1>Cost &amp; Performance Considerations</h1>
+  </div>
+
+  <h2>Per-Query Cost Estimate (GPT-4.1-mini)</h2>
+  <table>
+    <tr>
+      <th>Agent</th>
+      <th>Avg Input Tokens</th>
+      <th>Avg Output Tokens</th>
+      <th>Est. Cost</th>
+    </tr>
+    <tr>
+      <td>Resolver</td>
+      <td>~800</td>
+      <td>~150</td>
+      <td>~$0.0004</td>
+    </tr>
+    <tr>
+      <td>Extractor</td>
+      <td>~1,200</td>
+      <td>~200</td>
+      <td>~$0.0006</td>
+    </tr>
+    <tr>
+      <td>Validator</td>
+      <td>~1,500</td>
+      <td>~250</td>
+      <td>~$0.0008</td>
+    </tr>
+    <tr>
+      <td><strong>Total per query</strong></td>
+      <td>~3,500</td>
+      <td>~600</td>
+      <td><strong>~$0.002</strong></td>
+    </tr>
+  </table>
+
+  <h2>Performance Characteristics</h2>
+  <div class="cols">
+    <div class="col card">
+      <div class="card-title">Latency</div>
+      <ul>
+        <li>Data loading: ~2–3s (one-time, cached)</li>
+        <li>Tool execution: &lt;100ms (in-memory Pandas)</li>
+        <li>LLM calls: ~1–3s per agent (3 calls total)</li>
+        <li><strong>Total: ~4–8s per query</strong></li>
+      </ul>
+    </div>
+    <div class="col card">
+      <div class="card-title">Reliability</div>
+      <ul>
+        <li>Heuristic fallback covers ~90% of demo queries</li>
+        <li>Tool whitelist prevents invalid operations</li>
+        <li>Parameter filtering avoids runtime errors</li>
+        <li>Graceful error handling with informative messages</li>
+      </ul>
+    </div>
+  </div>
+</div>
+
+<script>
+  mermaid.initialize({
+    startOnLoad: true,
+    theme: 'base',
+    themeVariables: {
+      primaryColor: '#e8f4fd',
+      primaryBorderColor: '#2e86de',
+      primaryTextColor: '#1e3a5f',
+      lineColor: '#2e86de',
+      secondaryColor: '#e8f8f0',
+      tertiaryColor: '#fef5e7',
+      fontSize: '14px'
+    },
+    flowchart: { curve: 'basis', useMaxWidth: true },
+    sequence: { useMaxWidth: true, actorMargin: 40 }
+  });
+</script>
+</body>
+</html>

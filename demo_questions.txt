@@ -1,0 +1,14 @@
+Retail Insights Assistant demo script
+
+1) How many blouse were sold?
+2) Which category sold the most units?
+3) Which 5 states generated the highest sales?
+4) What is the cancellation rate?
+5) Compare B2B and B2C sales.
+6) Who are the top 5 customers by revenue?
+7) What were total international sales in Jun-21?
+8) Which items are low in stock (below 5)?
+9) How much stock do we have by category?
+10) What is the price difference between Amazon and Flipkart in May 2022?
+11) Summarize the Expense IIGF statement.
+12) What does the warehouse file say about fill-rate penalty?

@@ -1,0 +1,1188 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Retail Insights Assistant — Scalability Architecture (100GB+)</title>
+<script src="https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.min.js"></script>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+
+  :root {
+    --primary: #1e3a5f;
+    --accent: #2e86de;
+    --accent-light: #e8f4fd;
+    --success: #27ae60;
+    --warning: #f39c12;
+    --danger: #e74c3c;
+    --purple: #7c3aed;
+    --purple-light: #ede9fe;
+    --bg: #ffffff;
+    --bg-alt: #f8f9fb;
+    --text: #2c3e50;
+    --text-light: #7f8c8d;
+    --border: #e0e6ed;
+    --shadow: 0 2px 12px rgba(0,0,0,0.08);
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+    color: var(--text);
+    background: var(--bg);
+    line-height: 1.7;
+    font-size: 14px;
+  }
+
+  @media print {
+    body { font-size: 11pt; }
+    .slide { page-break-after: always; box-shadow: none; border: none; margin: 0; padding: 40px; }
+    .slide:last-child { page-break-after: avoid; }
+  }
+
+  .slide {
+    max-width: 960px;
+    margin: 40px auto;
+    padding: 48px 56px;
+    background: var(--bg);
+    border-radius: 12px;
+    box-shadow: var(--shadow);
+    border: 1px solid var(--border);
+  }
+
+  .slide-header {
+    border-bottom: 3px solid var(--accent);
+    padding-bottom: 12px;
+    margin-bottom: 28px;
+  }
+
+  .slide-number {
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--accent);
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+  }
+
+  h1 {
+    font-size: 28px;
+    font-weight: 700;
+    color: var(--primary);
+    margin-top: 4px;
+  }
+
+  h2 {
+    font-size: 20px;
+    font-weight: 600;
+    color: var(--primary);
+    margin: 24px 0 12px;
+  }
+
+  h3 {
+    font-size: 16px;
+    font-weight: 600;
+    color: var(--accent);
+    margin: 18px 0 8px;
+  }
+
+  p { margin: 8px 0; }
+
+  ul, ol { margin: 8px 0 8px 24px; }
+  li { margin: 4px 0; }
+
+  .mermaid {
+    display: flex;
+    justify-content: center;
+    margin: 24px 0;
+    background: var(--bg-alt);
+    border-radius: 8px;
+    padding: 20px;
+    border: 1px solid var(--border);
+  }
+
+  .badge {
+    display: inline-block;
+    padding: 3px 10px;
+    border-radius: 12px;
+    font-size: 12px;
+    font-weight: 600;
+  }
+
+  .badge-blue { background: var(--accent-light); color: var(--accent); }
+  .badge-green { background: #e8f8f0; color: var(--success); }
+  .badge-orange { background: #fef5e7; color: var(--warning); }
+  .badge-red { background: #fdedec; color: var(--danger); }
+  .badge-purple { background: var(--purple-light); color: var(--purple); }
+
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 16px 0;
+    font-size: 13px;
+  }
+
+  th {
+    background: var(--primary);
+    color: white;
+    padding: 10px 14px;
+    text-align: left;
+    font-weight: 600;
+  }
+
+  td {
+    padding: 9px 14px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  tr:nth-child(even) { background: var(--bg-alt); }
+
+  .callout {
+    padding: 16px 20px;
+    border-radius: 8px;
+    margin: 16px 0;
+    border-left: 4px solid;
+  }
+
+  .callout-info { background: var(--accent-light); border-color: var(--accent); }
+  .callout-success { background: #e8f8f0; border-color: var(--success); }
+  .callout-warning { background: #fef5e7; border-color: var(--warning); }
+  .callout-purple { background: var(--purple-light); border-color: var(--purple); }
+
+  .cols { display: flex; gap: 24px; margin: 16px 0; }
+  .col { flex: 1; }
+
+  .card {
+    background: var(--bg-alt);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 16px;
+    margin: 8px 0;
+  }
+
+  .card-title {
+    font-weight: 600;
+    color: var(--primary);
+    margin-bottom: 6px;
+  }
+
+  code {
+    background: var(--bg-alt);
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-size: 13px;
+    color: var(--accent);
+  }
+
+  .title-slide {
+    text-align: center;
+    padding: 80px 56px;
+  }
+
+  .title-slide h1 {
+    font-size: 36px;
+    margin-bottom: 12px;
+  }
+
+  .title-slide .subtitle {
+    font-size: 18px;
+    color: var(--text-light);
+    margin-bottom: 32px;
+  }
+
+  .title-slide .meta {
+    font-size: 14px;
+    color: var(--text-light);
+  }
+
+  .comparison-row { display: flex; gap: 16px; margin: 16px 0; }
+  .comparison-col {
+    flex: 1;
+    border-radius: 8px;
+    padding: 16px;
+  }
+  .current { background: #fef5e7; border: 2px solid var(--warning); }
+  .proposed { background: #e8f8f0; border: 2px solid var(--success); }
+</style>
+</head>
+<body>
+
+<!-- ============================================================ -->
+<!-- SLIDE 1: Title -->
+<!-- ============================================================ -->
+<div class="slide title-slide">
+  <div class="slide-number">Scalability Architecture</div>
+  <h1>Scaling the Retail Insights Assistant</h1>
+  <p class="subtitle">Architecture Design for 100GB+ Datasets</p>
+  <p class="meta">
+    From in-memory Pandas to distributed cloud-native analytics<br>
+    February 2026
+  </p>
+</div>
+
+<!-- ============================================================ -->
+<!-- SLIDE 2: Current vs Target -->
+<!-- ============================================================ -->
+<div class="slide">
+  <div class="slide-header">
+    <div class="slide-number">Slide 1</div>
+    <h1>Current State vs. Scale Target</h1>
+  </div>
+
+  <div class="comparison-row">
+    <div class="comparison-col current">
+      <div class="card-title">📦 Current Demo (~50MB)</div>
+      <ul>
+        <li>Single-process Streamlit app</li>
+        <li>All data loaded into Pandas in-memory</li>
+        <li>7 CSV files, ~175K total rows</li>
+        <li>18 deterministic Pandas tools</li>
+        <li>3 sequential LLM calls per query</li>
+        <li>No caching or persistence layer</li>
+      </ul>
+    </div>
+    <div class="comparison-col proposed">
+      <div class="card-title">🚀 Target Scale (100GB+)</div>
+      <ul>
+        <li>Distributed compute (PySpark / Dask)</li>
+        <li>Cloud data warehouse (BigQuery / Snowflake)</li>
+        <li>Data lake on object storage (S3 / GCS)</li>
+        <li>RAG with vector embeddings (FAISS / Pinecone)</li>
+        <li>Prompt caching &amp; query result caching</li>
+        <li>Monitoring, cost control, autoscaling</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="mermaid">
+    graph LR
+      A["📦 Current<br/>50MB / Pandas<br/>Single Process"] -->|"Scale x2000"| B["🚀 Target<br/>100GB+ / Distributed<br/>Cloud-Native"]
+
+      subgraph Challenges
+        C["Memory Limits"]
+        D["Query Latency"]
+        E["LLM Cost at Scale"]
+        F["Data Freshness"]
+        G["Concurrent Users"]
+      end
+
+      B --> C
+      B --> D
+      B --> E
+      B --> F
+      B --> G
+
+      style A fill:#fef5e7,stroke:#f39c12
+      style B fill:#e8f8f0,stroke:#27ae60
+      style Challenges fill:#fdedec,stroke:#e74c3c
+  </div>
+</div>
+
+<!-- ============================================================ -->
+<!-- SLIDE 3: High-Level Scaled Architecture -->
+<!-- ============================================================ -->
+<div class="slide">
+  <div class="slide-header">
+    <div class="slide-number">Slide 2</div>
+    <h1>High-Level Scaled Architecture</h1>
+  </div>
+
+  <div class="mermaid">
+    graph TB
+      subgraph INGEST["A. Data Ingestion"]
+        A1["Raw CSV / API<br/>Transactional Sources"] --> A2["Apache Airflow<br/>Orchestrator"]
+        A2 --> A3["PySpark / Dask<br/>ETL Pipeline"]
+        A3 --> A4["Data Quality<br/>Great Expectations"]
+      end
+
+      subgraph STORE["B. Storage Layer"]
+        B1["☁️ Data Lake<br/>S3 / GCS<br/>(Parquet / Delta)"]
+        B2["🏢 Data Warehouse<br/>BigQuery / Snowflake"]
+        B3["🔍 Vector Store<br/>Pinecone / FAISS"]
+        B4["⚡ Cache Layer<br/>Redis"]
+      end
+
+      subgraph QUERY["C. Query Layer"]
+        C1["🤖 Agent Pipeline<br/>LangChain / CrewAI"]
+        C2["SQL Generator<br/>Text-to-SQL"]
+        C3["RAG Retriever<br/>Semantic Search"]
+        C4["Prompt Cache<br/>Result Cache"]
+      end
+
+      subgraph SERVE["D. Serving Layer"]
+        D1["FastAPI<br/>Backend"]
+        D2["Streamlit /<br/>React Frontend"]
+        D3["Load Balancer<br/>+ Autoscaler"]
+      end
+
+      subgraph MONITOR["E. Monitoring"]
+        E1["Prometheus /<br/>Grafana"]
+        E2["LLM Eval<br/>Accuracy Tracking"]
+        E3["Cost Dashboard<br/>Token Budgets"]
+      end
+
+      A4 --> B1
+      A4 --> B2
+      A4 --> B3
+      B1 --> C1
+      B2 --> C2
+      B3 --> C3
+      B4 --> C4
+      C1 --> D1
+      C2 --> D1
+      C3 --> D1
+      C4 --> D1
+      D1 --> D2
+      D3 --> D1
+      D1 --> E1
+      C1 --> E2
+      C1 --> E3
+
+      style INGEST fill:#e8f4fd,stroke:#2e86de
+      style STORE fill:#fef5e7,stroke:#f39c12
+      style QUERY fill:#e8f8f0,stroke:#27ae60
+      style SERVE fill:#ede9fe,stroke:#7c3aed
+      style MONITOR fill:#fdedec,stroke:#e74c3c
+  </div>
+
+  <div class="callout callout-info">
+    <strong>Design Philosophy:</strong> The architecture separates concerns into five layers — Ingest, Store, Query, Serve, Monitor — each independently scalable. The agent pipeline remains the orchestration brain, but data operations move from in-memory Pandas to distributed SQL and vector search.
+  </div>
+</div>
+
+<!-- ============================================================ -->
+<!-- SLIDE 4: Data Engineering & Preprocessing -->
+<!-- ============================================================ -->
+<div class="slide">
+  <div class="slide-header">
+    <div class="slide-number">Slide 3</div>
+    <h1>A. Data Engineering &amp; Preprocessing</h1>
+  </div>
+
+  <div class="mermaid">
+    graph LR
+      subgraph Sources["Data Sources"]
+        S1["CSV Uploads"]
+        S2["ERP / POS APIs"]
+        S3["Marketplace Feeds<br/>Amazon, Flipkart"]
+      end
+
+      subgraph Batch["Batch Pipeline (Daily)"]
+        B1["Apache Airflow<br/>DAG Scheduler"]
+        B2["PySpark on<br/>Databricks / EMR"]
+        B3["Data Quality<br/>Great Expectations"]
+      end
+
+      subgraph Stream["Real-Time (Optional)"]
+        RT1["Kafka / Pub-Sub"]
+        RT2["Spark Structured<br/>Streaming"]
+      end
+
+      subgraph Output["Cleaned Output"]
+        O1["Parquet files<br/>partitioned by date"]
+        O2["Delta Lake<br/>ACID transactions"]
+      end
+
+      S1 --> B1
+      S2 --> B1
+      S3 --> B1
+      B1 --> B2
+      B2 --> B3
+      B3 --> O1
+      B3 --> O2
+
+      S2 --> RT1
+      S3 --> RT1
+      RT1 --> RT2
+      RT2 --> O2
+
+      style Sources fill:#fdedec,stroke:#e74c3c
+      style Batch fill:#e8f4fd,stroke:#2e86de
+      style Stream fill:#ede9fe,stroke:#7c3aed
+      style Output fill:#e8f8f0,stroke:#27ae60
+  </div>
+
+  <h2>Batch Processing Strategy</h2>
+  <div class="cols">
+    <div class="col card">
+      <div class="card-title">PySpark on Databricks</div>
+      <ul>
+        <li>Distributed DataFrame operations across cluster</li>
+        <li>Handles 100GB+ CSV ingestion in minutes</li>
+        <li>Schema enforcement and type coercion at scale</li>
+        <li>Partitioned writes by <code>date</code> and <code>category</code></li>
+      </ul>
+    </div>
+    <div class="col card">
+      <div class="card-title">Data Quality Gates</div>
+      <ul>
+        <li><strong>Great Expectations</strong> for validation rules</li>
+        <li>Null checks, range validation, referential integrity</li>
+        <li>Schema drift detection across ingestion runs</li>
+        <li>Quarantine bad records; alert on threshold breaches</li>
+      </ul>
+    </div>
+  </div>
+
+  <h2>Cleaning Pipeline at Scale</h2>
+  <table>
+    <tr>
+      <th>Step</th>
+      <th>Current (Pandas)</th>
+      <th>Scaled (PySpark)</th>
+    </tr>
+    <tr>
+      <td>Column normalization</td>
+      <td><code>df.columns.str.replace()</code></td>
+      <td><code>df.toDF(*normalized_names)</code></td>
+    </tr>
+    <tr>
+      <td>Date parsing</td>
+      <td><code>pd.to_datetime()</code></td>
+      <td><code>F.to_timestamp()</code> with format</td>
+    </tr>
+    <tr>
+      <td>Numeric coercion</td>
+      <td><code>pd.to_numeric(errors='coerce')</code></td>
+      <td><code>F.col().cast(DoubleType())</code></td>
+    </tr>
+    <tr>
+      <td>Status flags</td>
+      <td>Vectorized <code>.isin()</code></td>
+      <td><code>F.when().otherwise()</code> UDF</td>
+    </tr>
+    <tr>
+      <td>Output format</td>
+      <td>In-memory DataFrame</td>
+      <td>Partitioned Parquet / Delta Lake</td>
+    </tr>
+  </table>
+</div>
+
+<!-- ============================================================ -->
+<!-- SLIDE 5: Storage & Indexing -->
+<!-- ============================================================ -->
+<div class="slide">
+  <div class="slide-header">
+    <div class="slide-number">Slide 4</div>
+    <h1>B. Storage &amp; Indexing</h1>
+  </div>
+
+  <div class="mermaid">
+    graph TB
+      subgraph Lake["Data Lake (Cold/Warm)"]
+        L1["AWS S3 / GCS<br/>Raw Zone"]
+        L2["Delta Lake<br/>Curated Zone"]
+        L3["Parquet Files<br/>partitioned by date,<br/>category, region"]
+      end
+
+      subgraph Warehouse["Data Warehouse (Hot)"]
+        W1["BigQuery /<br/>Snowflake"]
+        W2["Materialized Views<br/>pre-aggregated KPIs"]
+        W3["Clustering Keys<br/>date, category, state"]
+      end
+
+      subgraph Analytical["Analytical Layer"]
+        A1["DuckDB<br/>for ad-hoc local queries"]
+        A2["Parquet-native<br/>querying on lake"]
+      end
+
+      subgraph Vector["Vector Store"]
+        V1["Pinecone / FAISS"]
+        V2["Product embeddings"]
+        V3["Document embeddings<br/>for text data"]
+      end
+
+      L1 -->|"ETL"| L2
+      L2 --> L3
+      L3 -->|"external table"| W1
+      W1 --> W2
+      L3 --> A1
+      L3 --> A2
+      L2 -->|"embed"| V1
+
+      style Lake fill:#e8f4fd,stroke:#2e86de
+      style Warehouse fill:#fef5e7,stroke:#f39c12
+      style Analytical fill:#e8f8f0,stroke:#27ae60
+      style Vector fill:#ede9fe,stroke:#7c3aed
+  </div>
+
+  <h2>Storage Tier Strategy</h2>
+  <table>
+    <tr>
+      <th>Tier</th>
+      <th>Technology</th>
+      <th>Data</th>
+      <th>Access Pattern</th>
+      <th>Cost</th>
+    </tr>
+    <tr>
+      <td><span class="badge badge-blue">Cold</span></td>
+      <td>S3 / GCS (Standard IA)</td>
+      <td>Raw CSVs, archives</td>
+      <td>Infrequent; batch ETL</td>
+      <td>~$0.01/GB/mo</td>
+    </tr>
+    <tr>
+      <td><span class="badge badge-green">Warm</span></td>
+      <td>Delta Lake on S3/GCS</td>
+      <td>Curated Parquet, versioned</td>
+      <td>ETL output; analytical queries</td>
+      <td>~$0.02/GB/mo</td>
+    </tr>
+    <tr>
+      <td><span class="badge badge-orange">Hot</span></td>
+      <td>BigQuery / Snowflake</td>
+      <td>Materialized views, KPI tables</td>
+      <td>Low-latency agent queries</td>
+      <td>~$5/TB scanned</td>
+    </tr>
+    <tr>
+      <td><span class="badge badge-purple">Vector</span></td>
+      <td>Pinecone / FAISS</td>
+      <td>Embeddings (products, documents)</td>
+      <td>Semantic similarity search</td>
+      <td>~$70/mo (Pinecone Starter)</td>
+    </tr>
+  </table>
+
+  <h2>Indexing Strategies</h2>
+  <div class="cols">
+    <div class="col card">
+      <div class="card-title">Columnar Partitioning</div>
+      <ul>
+        <li>Partition by <code>year/month/day</code> for time-range queries</li>
+        <li>Cluster by <code>category</code>, <code>state</code> for filtered aggregations</li>
+        <li>Parquet columnar format: only read needed columns</li>
+        <li>Predicate pushdown eliminates full scans</li>
+      </ul>
+    </div>
+    <div class="col card">
+      <div class="card-title">Materialized Views</div>
+      <ul>
+        <li>Pre-computed KPIs: total sales, cancellation rate, stock levels</li>
+        <li>Refreshed daily by Airflow pipeline</li>
+        <li>Sub-second query response for common questions</li>
+        <li>Reduces warehouse compute costs by 80%+</li>
+      </ul>
+    </div>
+  </div>
+</div>
+
+<!-- ============================================================ -->
+<!-- SLIDE 6: Retrieval & Query Efficiency -->
+<!-- ============================================================ -->
+<div class="slide">
+  <div class="slide-header">
+    <div class="slide-number">Slide 5</div>
+    <h1>C. Retrieval &amp; Query Efficiency</h1>
+  </div>
+
+  <div class="mermaid">
+    graph TB
+      Q["💬 User Query"]
+
+      subgraph Router["Intelligent Query Router"]
+        R1["Intent Classification"]
+        R2{"Query Type?"}
+      end
+
+      subgraph SQL["SQL Path"]
+        S1["Text-to-SQL<br/>(LLM generates SQL)"]
+        S2["BigQuery / Snowflake<br/>Execution"]
+        S3["Result Cache<br/>(Redis, TTL=1h)"]
+      end
+
+      subgraph RAG["RAG Path"]
+        V1["Query Embedding<br/>(OpenAI ada-002)"]
+        V2["Vector Similarity<br/>(Pinecone / FAISS)"]
+        V3["Top-K Document<br/>Retrieval"]
+        V4["LLM Synthesis<br/>with context"]
+      end
+
+      subgraph Meta["Metadata Filter Path"]
+        M1["Extract filters:<br/>date, category, state"]
+        M2["Partition Pruning"]
+        M3["Pre-aggregated<br/>Materialized View"]
+      end
+
+      Q --> R1
+      R1 --> R2
+      R2 -->|"Structured<br/>(sales, stock)"| S1
+      R2 -->|"Unstructured<br/>(statements, docs)"| V1
+      R2 -->|"KPI / Simple"| M1
+
+      S1 --> S2
+      S2 --> S3
+      V1 --> V2
+      V2 --> V3
+      V3 --> V4
+      M1 --> M2
+      M2 --> M3
+
+      S3 --> ANS["📊 Results"]
+      V4 --> ANS
+      M3 --> ANS
+
+      style Router fill:#e8f4fd,stroke:#2e86de
+      style SQL fill:#fef5e7,stroke:#f39c12
+      style RAG fill:#ede9fe,stroke:#7c3aed
+      style Meta fill:#e8f8f0,stroke:#27ae60
+  </div>
+
+  <h2>Three Retrieval Strategies</h2>
+  <div class="cols">
+    <div class="col">
+      <div class="card">
+        <div class="card-title">1. SQL Generation (Structured Data)</div>
+        <p>For questions about sales, inventory, pricing — the LLM generates SQL that runs directly on BigQuery/Snowflake.</p>
+        <ul>
+          <li>Text-to-SQL with schema context injection</li>
+          <li>Query validation before execution</li>
+          <li>Result caching in Redis (TTL-based)</li>
+          <li>Row limit enforcement (max 100 rows returned)</li>
+        </ul>
+      </div>
+    </div>
+    <div class="col">
+      <div class="card">
+        <div class="card-title">2. RAG (Unstructured Text)</div>
+        <p>For expense statements, warehouse comparisons, and document-type queries.</p>
+        <ul>
+          <li>Documents chunked (512 tokens) and embedded</li>
+          <li>Query embedded → top-K similarity search</li>
+          <li>Retrieved chunks injected as LLM context</li>
+          <li>Handles new document types without code changes</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">3. Metadata Filtering + Materialized Views (KPI Queries)</div>
+    <p>Simple KPI queries ("What is the cancellation rate?") bypass LLM SQL generation entirely and hit pre-computed materialized views, delivering sub-second responses.</p>
+  </div>
+
+  <div class="callout callout-success">
+    <strong>Key Optimization:</strong> The Resolver Agent classifies query type first, routing to the cheapest and fastest retrieval path. Only complex analytical queries incur full SQL generation + warehouse scan costs.
+  </div>
+</div>
+
+<!-- ============================================================ -->
+<!-- SLIDE 7: Model Orchestration -->
+<!-- ============================================================ -->
+<div class="slide">
+  <div class="slide-header">
+    <div class="slide-number">Slide 6</div>
+    <h1>D. Model Orchestration at Scale</h1>
+  </div>
+
+  <div class="mermaid">
+    graph TB
+      subgraph Orchestration["LangChain / CrewAI Orchestration"]
+        O1["Query Intake"]
+        O2["Prompt Template<br/>Manager"]
+        O3["Agent Chain<br/>Resolver → Extractor → Validator"]
+      end
+
+      subgraph Caching["Multi-Level Caching"]
+        C1["Semantic Cache<br/>(embedding similarity)"]
+        C2["Exact Match Cache<br/>(Redis hash)"]
+        C3["SQL Result Cache<br/>(TTL = 1 hour)"]
+      end
+
+      subgraph Models["Model Tier Strategy"]
+        M1["GPT-4.1-mini<br/>Intent resolution,<br/>extraction"]
+        M2["GPT-4.1<br/>Complex analytical,<br/>multi-table joins"]
+        M3["Local LLM<br/>(Llama 3 8B)<br/>Simple KPI lookups"]
+      end
+
+      subgraph Cost["Cost Control"]
+        K1["Token Budget<br/>per query: 5K max"]
+        K2["Rate Limiter<br/>60 req/min"]
+        K3["Model Router<br/>complexity → tier"]
+      end
+
+      O1 --> C1
+      C1 -->|"cache miss"| O2
+      O2 --> O3
+      O3 --> M1
+      O3 -->|"complex"| M2
+      O3 -->|"simple KPI"| M3
+      O1 --> K1
+      K1 --> K2
+      K2 --> K3
+      K3 --> O3
+
+      style Orchestration fill:#e8f4fd,stroke:#2e86de
+      style Caching fill:#e8f8f0,stroke:#27ae60
+      style Models fill:#fef5e7,stroke:#f39c12
+      style Cost fill:#fdedec,stroke:#e74c3c
+  </div>
+
+  <h2>Prompt Management</h2>
+  <div class="cols">
+    <div class="col card">
+      <div class="card-title">Template Versioning</div>
+      <ul>
+        <li>Prompts stored as versioned templates</li>
+        <li>A/B testing of prompt variants</li>
+        <li>Schema context auto-injected from warehouse metadata</li>
+        <li>Few-shot examples managed in a prompt registry</li>
+      </ul>
+    </div>
+    <div class="col card">
+      <div class="card-title">Chain Optimization</div>
+      <ul>
+        <li>Parallel agent execution where possible (Extractor + Validator batched)</li>
+        <li>Short-circuit: skip Validator for cached / high-confidence answers</li>
+        <li>Streaming responses for better UX latency</li>
+        <li>LangChain callbacks for trace logging</li>
+      </ul>
+    </div>
+  </div>
+
+  <h2>Cost Optimization</h2>
+  <table>
+    <tr>
+      <th>Strategy</th>
+      <th>Mechanism</th>
+      <th>Estimated Savings</th>
+    </tr>
+    <tr>
+      <td>Semantic caching</td>
+      <td>Cache responses for similar queries (cosine &gt; 0.95)</td>
+      <td>40–60% fewer LLM calls</td>
+    </tr>
+    <tr>
+      <td>Model tiering</td>
+      <td>Use cheaper models for simple queries</td>
+      <td>30–50% cost reduction</td>
+    </tr>
+    <tr>
+      <td>Token budgets</td>
+      <td>Truncate context, limit output tokens</td>
+      <td>20% per-call savings</td>
+    </tr>
+    <tr>
+      <td>Materialized views</td>
+      <td>Bypass LLM entirely for pre-computed KPIs</td>
+      <td>100% savings for KPI queries</td>
+    </tr>
+    <tr>
+      <td>Batch processing</td>
+      <td>Queue and batch similar queries together</td>
+      <td>15–25% throughput improvement</td>
+    </tr>
+  </table>
+</div>
+
+<!-- ============================================================ -->
+<!-- SLIDE 8: Monitoring & Evaluation -->
+<!-- ============================================================ -->
+<div class="slide">
+  <div class="slide-header">
+    <div class="slide-number">Slide 7</div>
+    <h1>E. Monitoring &amp; Evaluation</h1>
+  </div>
+
+  <div class="mermaid">
+    graph LR
+      subgraph Metrics["📊 Key Metrics"]
+        M1["Response Accuracy"]
+        M2["End-to-End Latency"]
+        M3["LLM Cost per Query"]
+        M4["Cache Hit Rate"]
+        M5["Error Rate"]
+      end
+
+      subgraph Collection["📡 Collection"]
+        C1["Prometheus<br/>metrics exporter"]
+        C2["LangSmith /<br/>Langfuse traces"]
+        C3["Custom eval<br/>pipeline"]
+      end
+
+      subgraph Dashboards["📈 Dashboards"]
+        D1["Grafana<br/>Operational"]
+        D2["LLM Eval<br/>Dashboard"]
+        D3["Cost<br/>Dashboard"]
+      end
+
+      subgraph Alerts["🔔 Alerts"]
+        A1["Latency > 10s"]
+        A2["Accuracy < 85%"]
+        A3["Daily cost > $50"]
+        A4["Error rate > 5%"]
+      end
+
+      M1 --> C3
+      M2 --> C1
+      M3 --> C2
+      M4 --> C1
+      M5 --> C1
+      C1 --> D1
+      C2 --> D2
+      C3 --> D2
+      C2 --> D3
+      D1 --> A1
+      D2 --> A2
+      D3 --> A3
+      D1 --> A4
+
+      style Metrics fill:#e8f4fd,stroke:#2e86de
+      style Collection fill:#fef5e7,stroke:#f39c12
+      style Dashboards fill:#e8f8f0,stroke:#27ae60
+      style Alerts fill:#fdedec,stroke:#e74c3c
+  </div>
+
+  <h2>Evaluation Framework</h2>
+  <div class="cols">
+    <div class="col card">
+      <div class="card-title">Accuracy Metrics</div>
+      <ul>
+        <li><strong>Factual correctness:</strong> Compare LLM answers to ground-truth SQL results</li>
+        <li><strong>Numerical precision:</strong> Automated check for ₹ amounts within 1% tolerance</li>
+        <li><strong>Completeness:</strong> Did the answer address all parts of the question?</li>
+        <li><strong>Hallucination detection:</strong> Flag claims not supported by tool results</li>
+      </ul>
+    </div>
+    <div class="col card">
+      <div class="card-title">Operational Metrics</div>
+      <ul>
+        <li><strong>P50 / P95 / P99 latency:</strong> Target P95 &lt; 8s</li>
+        <li><strong>Token usage:</strong> Per-agent and per-query tracking</li>
+        <li><strong>Cache hit rate:</strong> Target &gt; 40% for repeat patterns</li>
+        <li><strong>Tool execution time:</strong> BigQuery scan duration tracking</li>
+      </ul>
+    </div>
+  </div>
+
+  <h2>Error Handling &amp; Fallback Strategies</h2>
+  <table>
+    <tr>
+      <th>Failure Mode</th>
+      <th>Detection</th>
+      <th>Fallback Strategy</th>
+    </tr>
+    <tr>
+      <td>LLM returns invalid JSON</td>
+      <td>JSON parse failure</td>
+      <td>Heuristic planner (keyword matching)</td>
+    </tr>
+    <tr>
+      <td>LLM hallucination</td>
+      <td>Answer not grounded in tool results</td>
+      <td>Return raw data with disclaimer</td>
+    </tr>
+    <tr>
+      <td>SQL generation error</td>
+      <td>BigQuery execution exception</td>
+      <td>Retry with simplified prompt; fallback to materialized view</td>
+    </tr>
+    <tr>
+      <td>High latency (&gt;15s)</td>
+      <td>Timeout monitoring</td>
+      <td>Cancel and return cached similar answer</td>
+    </tr>
+    <tr>
+      <td>LLM API outage</td>
+      <td>HTTP 5xx / timeout</td>
+      <td>Switch to backup model provider; queue request</td>
+    </tr>
+    <tr>
+      <td>Low confidence response</td>
+      <td>Validator flags uncertainty</td>
+      <td>Return answer with confidence disclaimer; log for human review</td>
+    </tr>
+  </table>
+
+  <div class="callout callout-warning">
+    <strong>Human-in-the-Loop:</strong> Queries flagged as low-confidence are queued for human review. Reviewed answers feed back into the few-shot prompt registry, continuously improving accuracy.
+  </div>
+</div>
+
+<!-- ============================================================ -->
+<!-- SLIDE 9: Complete Scaled Pipeline Example -->
+<!-- ============================================================ -->
+<div class="slide">
+  <div class="slide-header">
+    <div class="slide-number">Slide 8</div>
+    <h1>Scaled Query-Response Pipeline</h1>
+  </div>
+
+  <div class="callout callout-info">
+    <strong>Example Query:</strong> <em>"Which 5 states generated the highest sales last quarter?"</em> on a 100GB+ dataset
+  </div>
+
+  <div class="mermaid">
+    sequenceDiagram
+      participant U as 👤 User
+      participant LB as ⚖️ Load Balancer
+      participant API as 🔌 FastAPI
+      participant Cache as ⚡ Redis Cache
+      participant R as 🔍 Resolver Agent
+      participant LLM as ☁️ GPT-4.1-mini
+      participant BQ as 🏢 BigQuery
+      participant E as 📋 Extractor
+      participant V as ✅ Validator
+
+      U->>LB: "Top 5 states last quarter?"
+      LB->>API: Route to available instance
+      API->>Cache: Check semantic cache
+      Cache-->>API: Cache MISS
+
+      API->>R: Resolve query intent
+      R->>LLM: Classify + generate SQL
+      LLM-->>R: SQL: SELECT state, SUM(amount)...<br/>WHERE date >= '2025-10-01'<br/>GROUP BY state ORDER BY 2 DESC LIMIT 5
+
+      R->>BQ: Execute SQL (partition pruned)
+      Note over BQ: Scans only Q4 partition<br/>~2GB instead of 100GB
+      BQ-->>R: 5 rows [{state, total}]
+
+      R->>E: Summarize results
+      E->>LLM: Format into bullets
+      LLM-->>E: Factual summary
+
+      E->>V: Validate answer
+      V->>LLM: Cross-check + format
+      LLM-->>V: Final answer
+
+      V-->>API: Response + metadata
+      API->>Cache: Store in cache (TTL=1h)
+      API-->>LB: Response
+      LB-->>U: "Top 5 states by sales in Q4..."
+  </div>
+
+  <h2>Performance at Scale</h2>
+  <table>
+    <tr>
+      <th>Stage</th>
+      <th>Current (50MB)</th>
+      <th>Scaled (100GB+)</th>
+    </tr>
+    <tr>
+      <td>Data load</td>
+      <td>2–3s (one-time)</td>
+      <td>0s (pre-loaded in warehouse)</td>
+    </tr>
+    <tr>
+      <td>Query resolution</td>
+      <td>1–2s (LLM)</td>
+      <td>1–2s (LLM, same)</td>
+    </tr>
+    <tr>
+      <td>Data retrieval</td>
+      <td>&lt;100ms (Pandas)</td>
+      <td>1–3s (BigQuery, partition-pruned)</td>
+    </tr>
+    <tr>
+      <td>Extraction + Validation</td>
+      <td>2–4s (2 LLM calls)</td>
+      <td>2–4s (2 LLM calls, same)</td>
+    </tr>
+    <tr>
+      <td><strong>Total (cold)</strong></td>
+      <td><strong>4–8s</strong></td>
+      <td><strong>4–9s</strong></td>
+    </tr>
+    <tr>
+      <td><strong>Total (cache hit)</strong></td>
+      <td>N/A</td>
+      <td><strong>&lt;200ms</strong></td>
+    </tr>
+  </table>
+
+  <div class="callout callout-success">
+    <strong>Key Insight:</strong> With partition pruning and materialized views, the 100GB+ system achieves comparable latency to the current 50MB demo — the warehouse scans only the relevant data slice, and caching eliminates repeat queries entirely.
+  </div>
+</div>
+
+<!-- ============================================================ -->
+<!-- SLIDE 10: Infrastructure & Deployment -->
+<!-- ============================================================ -->
+<div class="slide">
+  <div class="slide-header">
+    <div class="slide-number">Slide 9</div>
+    <h1>Infrastructure &amp; Deployment</h1>
+  </div>
+
+  <div class="mermaid">
+    graph TB
+      subgraph Cloud["☁️ Cloud Provider (GCP / AWS)"]
+        subgraph Compute["Compute"]
+          C1["Cloud Run /<br/>ECS Fargate<br/>(API containers)"]
+          C2["Databricks /<br/>EMR<br/>(ETL jobs)"]
+        end
+
+        subgraph Storage["Storage"]
+          S1["GCS / S3<br/>(Data Lake)"]
+          S2["BigQuery /<br/>Snowflake"]
+          S3["Memorystore /<br/>ElastiCache<br/>(Redis)"]
+        end
+
+        subgraph ML["ML & AI"]
+          M1["OpenAI API<br/>(LLM calls)"]
+          M2["Pinecone<br/>(Vector DB)"]
+          M3["Vertex AI /<br/>SageMaker<br/>(Custom models)"]
+        end
+
+        subgraph Ops["Operations"]
+          O1["Cloud Monitoring /<br/>CloudWatch"]
+          O2["Cloud Composer /<br/>MWAA (Airflow)"]
+          O3["Cloud Build /<br/>CodePipeline<br/>(CI/CD)"]
+        end
+      end
+
+      subgraph Users["👥 Users"]
+        U1["Web App<br/>(Streamlit / React)"]
+        U2["API Clients"]
+      end
+
+      U1 --> C1
+      U2 --> C1
+      C1 --> S2
+      C1 --> S3
+      C1 --> M1
+      C1 --> M2
+      O2 --> C2
+      C2 --> S1
+      S1 --> S2
+
+      style Cloud fill:#f0f4ff,stroke:#2e86de
+      style Compute fill:#e8f4fd,stroke:#2e86de
+      style Storage fill:#fef5e7,stroke:#f39c12
+      style ML fill:#ede9fe,stroke:#7c3aed
+      style Ops fill:#e8f8f0,stroke:#27ae60
+  </div>
+
+  <h2>Estimated Monthly Costs (100GB Dataset, 1K queries/day)</h2>
+  <table>
+    <tr>
+      <th>Component</th>
+      <th>Service</th>
+      <th>Est. Monthly Cost</th>
+    </tr>
+    <tr>
+      <td>Compute (API)</td>
+      <td>Cloud Run / Fargate (2 instances)</td>
+      <td>$50–100</td>
+    </tr>
+    <tr>
+      <td>Data Warehouse</td>
+      <td>BigQuery on-demand</td>
+      <td>$100–300</td>
+    </tr>
+    <tr>
+      <td>Data Lake</td>
+      <td>GCS / S3 (100GB)</td>
+      <td>$2–5</td>
+    </tr>
+    <tr>
+      <td>LLM API</td>
+      <td>OpenAI GPT-4.1-mini (3K queries × 3 calls)</td>
+      <td>$60–180</td>
+    </tr>
+    <tr>
+      <td>Cache</td>
+      <td>Redis (Memorystore / ElastiCache)</td>
+      <td>$30–60</td>
+    </tr>
+    <tr>
+      <td>Vector DB</td>
+      <td>Pinecone Starter</td>
+      <td>$70</td>
+    </tr>
+    <tr>
+      <td>ETL Orchestration</td>
+      <td>Cloud Composer / MWAA</td>
+      <td>$100–200</td>
+    </tr>
+    <tr>
+      <td><strong>Total</strong></td>
+      <td></td>
+      <td><strong>$400–900/mo</strong></td>
+    </tr>
+  </table>
+</div>
+
+<!-- ============================================================ -->
+<!-- SLIDE 11: Migration Roadmap -->
+<!-- ============================================================ -->
+<div class="slide">
+  <div class="slide-header">
+    <div class="slide-number">Slide 10</div>
+    <h1>Migration Roadmap</h1>
+  </div>
+
+  <div class="mermaid">
+    gantt
+      title Migration from Demo to Production Scale
+      dateFormat YYYY-MM-DD
+      axisFormat %b %Y
+
+      section Phase 1: Foundation
+      Set up cloud infra (GCP/AWS)           :a1, 2026-03-01, 14d
+      Migrate data to Data Lake (S3/GCS)     :a2, after a1, 7d
+      Set up BigQuery/Snowflake              :a3, after a1, 10d
+      Deploy ETL pipeline (Airflow + Spark)  :a4, after a2, 14d
+
+      section Phase 2: Query Layer
+      Implement Text-to-SQL                  :b1, after a3, 14d
+      Set up Redis caching                   :b2, after a3, 7d
+      Deploy vector store (Pinecone)         :b3, after a3, 10d
+      Implement RAG pipeline                 :b4, after b3, 14d
+
+      section Phase 3: Production
+      Containerize API (FastAPI + Docker)    :c1, after b1, 7d
+      Set up load balancer + autoscaling     :c2, after c1, 7d
+      Deploy monitoring (Grafana + alerts)   :c3, after c1, 10d
+      Implement semantic caching             :c4, after b2, 10d
+
+      section Phase 4: Optimization
+      Model tiering (GPT-4.1 / mini / local) :d1, after c1, 14d
+      A/B test prompt variants               :d2, after d1, 14d
+      Human-in-the-loop feedback loop        :d3, after c3, 14d
+      Performance tuning + cost optimization :d4, after d2, 14d
+  </div>
+
+  <div class="callout callout-purple">
+    <strong>Timeline:</strong> Estimated 10–12 weeks from demo to production-scale deployment, with Phase 1 (foundation) completing in the first 4 weeks and immediate ROI from the query layer in Phase 2.
+  </div>
+
+  <h2>Key Migration Principles</h2>
+  <div class="cols">
+    <div class="col card">
+      <div class="card-title">Incremental Migration</div>
+      Each phase delivers standalone value. The system remains functional throughout — new capabilities layer on top of existing ones.
+    </div>
+    <div class="col card">
+      <div class="card-title">Backward Compatible</div>
+      The 3-agent architecture (Resolver → Extractor → Validator) is preserved. Only the underlying data access and caching layers change.
+    </div>
+    <div class="col card">
+      <div class="card-title">Cost-Aware</div>
+      Each phase includes cost monitoring. Scaling decisions are driven by actual usage metrics, not upfront provisioning.
+    </div>
+  </div>
+</div>
+
+<script>
+  mermaid.initialize({
+    startOnLoad: true,
+    theme: 'base',
+    themeVariables: {
+      primaryColor: '#e8f4fd',
+      primaryBorderColor: '#2e86de',
+      primaryTextColor: '#1e3a5f',
+      lineColor: '#2e86de',
+      secondaryColor: '#e8f8f0',
+      tertiaryColor: '#fef5e7',
+      fontSize: '14px'
+    },
+    flowchart: { curve: 'basis', useMaxWidth: true },
+    sequence: { useMaxWidth: true, actorMargin: 40 },
+    gantt: { useMaxWidth: true }
+  });
+</script>
+</body>
+</html>
