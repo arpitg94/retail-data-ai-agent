@@ -17,6 +17,20 @@ from src.tools.pandas_tools import PandasTools
 
 
 class RetailInsightsCrew:
+    """
+    Multi-agent orchestrator implementing a plan-execute-validate pattern.
+
+    Pipeline stages (each tracked in the execution trace):
+      1. Resolver Agent  — NL query → deterministic tool call plan (with heuristic fallback)
+      2. Tool Execution  — runs PandasTools and collects ToolResult dicts
+      3. Extractor Agent — condenses raw tool outputs into factual summary
+      4. Validator Agent — cross-checks extraction against tool outputs, produces final answer
+
+    The full execution trace (plan, tool_results, extraction_summary, final_answer)
+    is returned for every query, enabling downstream evaluation and debugging.
+    See src/evaluation.py for the automated eval harness that scores these traces.
+    """
+
     def __init__(self, tools: PandasTools, model: str = "gpt-4o-mini"):
         self.tools = tools
         load_dotenv()
@@ -123,16 +137,35 @@ class RetailInsightsCrew:
         return str(crew.kickoff())
 
     def answer(self, query: str, history: list[dict[str, str]], mode: str) -> dict[str, Any]:
+        """
+        End-to-end pipeline: resolve → execute → extract → validate.
+
+        Returns a full execution trace dict with keys:
+          - plan: resolver output with intent and tool_calls
+          - tool_results: list of ToolResult dicts from deterministic execution
+          - extraction_summary: LLM-generated factual summary
+          - final_answer: validated business-friendly response
+          - metadata: timing and tool count for observability
+
+        The trace is used by src/evaluation.py to run automated scoring
+        (tool match, faithfulness, trace completeness) against ground-truth cases.
+        """
+        import time as _time
+
+        t0 = _time.perf_counter()
+
+        # Stage 1: Resolve NL query → tool call plan (LLM + heuristic fallback)
         plan = self._resolve_plan(query, history)
 
+        # Stage 2: Execute deterministic PandasTools
         tool_results: list[dict[str, Any]] = []
         for call in plan.get("tool_calls", []):
             result = self.tools.run_tool(call["tool_name"], **call.get("kwargs", {}))
             tool_results.append(result)
 
+        # Stage 3: LLM extraction — summarize tool outputs
         extraction_summary = self._summarize_extraction(query, tool_results)
 
-        # Simple post-filter for business phrasing question.
         if "blouse" in query.lower():
             for item in tool_results:
                 if item.get("tool_name") == "units_sold_by_category":
@@ -146,11 +179,20 @@ class RetailInsightsCrew:
                             f"\nBlouse units found: {blouse_rows[0].get('Qty', 0)}."
                         )
 
+        # Stage 4: LLM validation — produce final answer
         final_answer = self._validate_answer(query, extraction_summary, tool_results, mode)
+
+        elapsed = _time.perf_counter() - t0
+
         return {
             "plan": plan,
             "tool_results": tool_results,
             "extraction_summary": extraction_summary,
             "final_answer": final_answer,
+            "metadata": {
+                "total_latency_s": round(elapsed, 3),
+                "tools_invoked": len(tool_results),
+                "resolver_intent": plan.get("intent", ""),
+            },
         }
 
