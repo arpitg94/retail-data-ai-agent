@@ -1,0 +1,47 @@
+Loading dataset...
+
+--- Running Unit Tests ---
+
+======================================================================
+  UNIT TEST RESULTS: 23/23 passed
+======================================================================
+  [PASS] total_sales_amazon                          61.2ms  1 records
+  [PASS] units_sold_by_category                      65.8ms  9 records
+  [PASS] units_sold_by_category_filter               77.3ms  1 records
+  [PASS] category_sales_rank                         65.6ms  5 records
+  [PASS] state_sales_rank                            65.6ms  5 records
+  [PASS] city_sales_rank                             69.2ms  5 records
+  [PASS] order_status_breakdown                      42.3ms  13 records
+  [PASS] cancellation_rate                           30.5ms  1 records
+  [PASS] b2b_vs_b2c_summary                          75.4ms  2 records
+  [PASS] international_total_sales_all                2.7ms  1 records
+  [PASS] international_total_sales_jun                7.1ms  1 records
+  [PASS] top_customers_international                  5.6ms  5 records
+  [PASS] top_styles_international                     7.3ms  5 records
+  [PASS] total_stock_by_category                      2.1ms  20 records
+  [PASS] low_stock_items                              2.4ms  50 records
+  [PASS] stock_by_color                               2.2ms  20 records
+  [PASS] channel_price_comparison_may2022             1.2ms  30 records
+  [PASS] price_snapshot_march2021                     1.1ms  5 records
+  [PASS] expense_statement_text                       0.0ms  1 records
+  [PASS] warehouse_comparison_text                    0.0ms  1 records
+  [PASS] unknown_tool_handling                        0.0ms  Unknown tool nonexistent_tool.
+  [PASS] cancellation_rate_bounds                    30.7ms  rate=14.21%
+  [PASS] blouse_qty_non_negative                     77.1ms  
+======================================================================
+
+
+--- Running LLM Pipeline Evaluation ---
+  [PASS] blouse_units              tools=  OK  data=  OK  trace=  OK    3.20s  tools_invoked=['units_sold_by_category']
+  [PASS] top_category              tools=  OK  data=  OK  trace=  OK    2.31s  tools_invoked=['units_sold_by_category']
+  [PASS] top_5_states              tools=  OK  data=  OK  trace=  OK    3.89s  tools_invoked=['state_sales_rank']
+  [PASS] cancellation_rate         tools=  OK  data=  OK  trace=  OK    2.73s  tools_invoked=['cancellation_rate']
+  [PASS] b2b_b2c                   tools=  OK  data=  OK  trace=  OK    3.73s  tools_invoked=['b2b_vs_b2c_summary']
+  [PASS] international_jun21       tools=  OK  data=  OK  trace=  OK    2.96s  tools_invoked=['international_total_sales']
+  [PASS] low_stock                 tools=  OK  data=  OK  trace=  OK    3.71s  tools_invoked=['low_stock_items']
+  [PASS] price_diff_amz_fk         tools=  OK  data=  OK  trace=  OK    2.97s  tools_invoked=['channel_price_comparison_may2022']
+
+======================================================================
+  LLM EVAL RESULTS: 8/8 passed  |  avg latency: 3.19s
+======================================================================
+
